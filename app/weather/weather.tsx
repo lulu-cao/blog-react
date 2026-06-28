@@ -1,7 +1,7 @@
 "use client"
 
 import { fetchWeatherApi } from "openmeteo";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import WeatherHourly from "./weather-hourly";
 import WeatherDaily from "./weather-daily";
 import WeatherCurrent from "./weather-current";
@@ -11,13 +11,24 @@ export default function Weather() {
   const [hourlyWeatherData, setHourlyWeatherData] = useState({} as HourlyWeather);
   const [dailyWeatherData, setDailytWeatherData] = useState({} as DailyWeather);
   const [geolocation, setGeolocation] = useState({} as UserGeolocation)
+  const [isShowingWeatherDetails, setIsShowingWeatherDetails] = useState(false);
+
   const getLocation = () => {
+    console.log("Getting location")
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(success, error);
     } else { 
       console.error("Geolocation is not supported by this browser.")
     }
   }
+
+  useEffect(()=>{
+    if (!geolocation.latitude) {
+      getLocation()
+    } else {
+      getCurrentWeather();
+    }
+  },[geolocation])
   
   const success = (position: Position) => {
     setGeolocation({latitude: position.coords.latitude, longitude: position.coords.longitude});
@@ -31,7 +42,41 @@ export default function Weather() {
   const range = (start: number, stop: number, step: number) =>
     Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
 
-  const refreshWeather = async (): Promise<void> => {
+  const getCurrentWeather = async (latitude?: number, longitude?: number): Promise<void> => {
+    console.log("Getting current weather");
+
+    const params = {
+      latitude: latitude || geolocation.latitude,
+      longitude: longitude || geolocation.longitude,
+      current: ["temperature_2m", "weather_code", "is_day"],
+      timezone: "America/Chicago",
+    };
+    const url = "https://api.open-meteo.com/v1/forecast";
+    const responses = await fetchWeatherApi(url, params);
+
+    // Process first location. Add a for-loop for multiple locations or weather models
+    const response = responses[0];
+    const current = response.current()!;
+
+    // Note: The order of weather variables in the URL query and the indices below need to match!
+    setCurrentWeatherData({
+      temperature: current.variables(0)!.value(), 
+      weatherCode: current.variables(1)!.value() as WeatherCode,
+    })
+  }
+
+  const getDailyAndHourly = async (): Promise<void> => {
+    if (isShowingWeatherDetails) {
+      console.log("hiding weather details")
+      setIsShowingWeatherDetails(false);
+      setDailytWeatherData({} as DailyWeather);
+      setHourlyWeatherData({} as HourlyWeather);
+      return;
+    } else {
+      setIsShowingWeatherDetails(true)
+    }
+
+    console.log("getDailyAndHourly");
     if (!geolocation.latitude) {
       console.error("Geolocation not provided");
       return;
@@ -40,34 +85,28 @@ export default function Weather() {
     const params = {
       latitude: geolocation.latitude,
       longitude: geolocation.longitude,
-      current: ["temperature_2m", "weather_code", "is_day"],
       hourly: ["weather_code", "temperature_2m"],
 	    daily: ["weather_code", "temperature_2m_max", "temperature_2m_min"],
+      timezone: "America/Chicago",
+      forecast_days: 16,
     };
     const url = "https://api.open-meteo.com/v1/forecast";
     const responses = await fetchWeatherApi(url, params);
-    console.log("Refreshing weather");
 
     // Process first location. Add a for-loop for multiple locations or weather models
     const response = responses[0];
     const utcOffsetSeconds = response.utcOffsetSeconds();
 
-    const current = response.current()!;
     const hourly = response.hourly()!;
     const daily = response.daily()!;
 
     // Note: The order of weather variables in the URL query and the indices below need to match!
-    setCurrentWeatherData({
-      temperature: current.variables(0)!.value(), 
-      weatherCode: current.variables(1)!.value() as WeatherCode,
-    })
-
     setHourlyWeatherData({
       time: range(Number(hourly.time()), Number(hourly.timeEnd()), hourly.interval()).map(
         (t) => new Date((t + utcOffsetSeconds) * 1000)
       ),
       weatherCode: hourly.variables(0)!.valuesArray()!,
-      temperature_2m: hourly.variables(0)!.valuesArray(),      
+      temperature_2m: hourly.variables(1)!.valuesArray(), 
     })
 
     setDailytWeatherData({
@@ -81,15 +120,11 @@ export default function Weather() {
   }
 
   return <div>
-    <div>
-      <button onClick={getLocation}>Get Location</button>
+    <div onClick={getDailyAndHourly}>
+      <WeatherCurrent 
+        currentWeatherData={currentWeatherData as CurrentWeather} 
+      />
     </div>
-    <div>
-      <button onClick={refreshWeather}>Refresh Weather</button>
-    </div>
-    <WeatherCurrent 
-      currentWeatherData={currentWeatherData as CurrentWeather} 
-    />
     <WeatherDaily dailyWeatherData={dailyWeatherData as DailyWeather} />
     <WeatherHourly hourlyWeatherData={hourlyWeatherData as HourlyWeather} />
   </div>

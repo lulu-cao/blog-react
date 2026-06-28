@@ -1,6 +1,17 @@
-import { getWeatherDescription, dateFormatter } from "../utils/weather"
+import { useEffect, useState } from "react";
+import { dateFormatter, getWeatherIcon } from "../../utils/weather"
 
 export default function WeatherDaily({dailyWeatherData}:{dailyWeatherData: DailyWeather}) {
+  const [weatherDescription, setWeatherDescription] = useState({} as WeatherDescriptions);
+  
+  useEffect(()=>{
+    const getWeatherDescriptions = async() => {
+      const fetchedDescription = await getWeatherIcon();
+      setWeatherDescription(fetchedDescription)
+    };
+    getWeatherDescriptions();
+  },[dailyWeatherData])
+
   return <>
     {dailyWeatherData && dailyWeatherData.time && 
       <div>
@@ -8,11 +19,13 @@ export default function WeatherDaily({dailyWeatherData}:{dailyWeatherData: Daily
         <ul>
           {dailyWeatherData.time.map((time,index)=>
             <li key={index}>{dateFormatter.format(time)} - {" "}
-              <span>
-                {dailyWeatherData.weatherCode && 
-                  getWeatherDescription(dailyWeatherData.weatherCode[index])}
-                {" "}-{" "}
-              </span>
+              <img 
+                src={weatherDescription && 
+                  weatherDescription[dailyWeatherData.weatherCode[index] as keyof WeatherDescriptions]["day"]["image"]}
+                height={32}
+                width={32}
+                className="inline-block"
+              ></img>
               <span>
                 {dailyWeatherData.temperatureMin && 
                   Math.round(dailyWeatherData.temperatureMin[index])}
@@ -21,7 +34,7 @@ export default function WeatherDaily({dailyWeatherData}:{dailyWeatherData: Daily
               <span>
                 {dailyWeatherData.temperatureMax && 
                   Math.round(dailyWeatherData.temperatureMax[index])}
-                {" "}degrees
+                °C
               </span>
             </li>
           )}

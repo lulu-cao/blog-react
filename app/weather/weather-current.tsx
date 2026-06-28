@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getWeatherIcon } from "../utils/weather"
+import { getWeatherIcon } from "../../utils/weather"
 
 export default function WeatherCurrent ({currentWeatherData}:{currentWeatherData:CurrentWeather}) {
   const [weatherDescription, setWeatherDescription] = useState({} as WeatherDescriptions);
@@ -15,7 +15,6 @@ export default function WeatherCurrent ({currentWeatherData}:{currentWeatherData
   return <>
     {currentWeatherData && currentWeatherData.temperature &&
       <div>
-        <h1 className="text-xl font-bold">Current weather: </h1>
         <img 
           src={weatherDescription && 
             weatherDescription[currentWeatherData.weatherCode]["day"]["image"]}
@@ -24,7 +23,7 @@ export default function WeatherCurrent ({currentWeatherData}:{currentWeatherData
           className="inline-block"
         ></img>
         <span>
-          {Math.round(currentWeatherData.temperature)} degrees
+          {Math.round(currentWeatherData.temperature)}°C
         </span> 
       </div>
     }
