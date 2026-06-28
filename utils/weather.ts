@@ -1,4 +1,4 @@
-const weatherCodeMap: Record<weatherCode, string> = {
+const weatherCodeMap: Record<WeatherCode, string> = {
   0: "Clear sky",
   1: "Mainly clear",
   2: "Partly cloudy",
@@ -31,10 +31,27 @@ const weatherCodeMap: Record<weatherCode, string> = {
 
 export const getWeatherDescription = (code: number) => {
   if (code in weatherCodeMap) {
-    return weatherCodeMap[code as weatherCode]
+    return weatherCodeMap[code as WeatherCode]
   } else {
     return `code ${code}`
   }
+}
+
+export const getWeatherIcon = async (): Promise<WeatherDescriptions> => {
+  const url = "https://gist.githubusercontent.com/stellasphere/9490c195ed2b53c707087c8c2db4ec0c/raw/76b0cb0ef0bfd8a2ec988aa54e30ecd1b483495d/descriptions.json";
+  let fetchedDescription = {} as WeatherDescriptions;
+  await fetch(url)
+    .then((response)=>{
+      if (!response.ok) {
+        console.error("Failed to fetch weather description");
+        console.log(response)
+      }
+      return response.json();
+    })
+    .then((description)=>{
+      fetchedDescription = description;
+    });
+  return fetchedDescription;
 }
 
 export const timeFormatter = new Intl.DateTimeFormat("en-US", {

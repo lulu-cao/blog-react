@@ -20,8 +20,7 @@ export default function Weather() {
   }
   
   const success = (position: Position) => {
-    setGeolocation({latitude: position.coords.latitude, longitude: position.coords.longitude})
-    alert("Success");
+    setGeolocation({latitude: position.coords.latitude, longitude: position.coords.longitude});
   }
   
   const error = () => {
@@ -41,13 +40,14 @@ export default function Weather() {
     const params = {
       latitude: geolocation.latitude,
       longitude: geolocation.longitude,
-      current: 'temperature_2m,weather_code',
-      hourly: "weather_code,temperature_2m",
-      daily: 'weather_code,temperature_2m_max,temperature_2m_min'
+      current: ["temperature_2m", "weather_code", "is_day"],
+      hourly: ["weather_code", "temperature_2m"],
+	    daily: ["weather_code", "temperature_2m_max", "temperature_2m_min"],
     };
     const url = "https://api.open-meteo.com/v1/forecast";
     const responses = await fetchWeatherApi(url, params);
-    
+    console.log("Refreshing weather");
+
     // Process first location. Add a for-loop for multiple locations or weather models
     const response = responses[0];
     const utcOffsetSeconds = response.utcOffsetSeconds();
@@ -59,7 +59,7 @@ export default function Weather() {
     // Note: The order of weather variables in the URL query and the indices below need to match!
     setCurrentWeatherData({
       temperature: current.variables(0)!.value(), 
-      weatherCode: current.variables(1)!.value(),
+      weatherCode: current.variables(1)!.value() as WeatherCode,
     })
 
     setHourlyWeatherData({
@@ -87,8 +87,10 @@ export default function Weather() {
     <div>
       <button onClick={refreshWeather}>Refresh Weather</button>
     </div>
-    <WeatherCurrent currentWeatherData={currentWeatherData as CurrentWeather} />
-    <WeatherHourly hourlyWeatherData={hourlyWeatherData as HourlyWeather} />
+    <WeatherCurrent 
+      currentWeatherData={currentWeatherData as CurrentWeather} 
+    />
     <WeatherDaily dailyWeatherData={dailyWeatherData as DailyWeather} />
+    <WeatherHourly hourlyWeatherData={hourlyWeatherData as HourlyWeather} />
   </div>
 }
