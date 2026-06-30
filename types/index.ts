@@ -37,6 +37,7 @@ type WeatherCodes = "0" | "1" | "2" | "3" | "45" | "48" | "51" | "53" | "55" | "
 interface CurrentWeather {
   temperature: number,
   weatherCode: WeatherCode,
+  isDay?: number,
 }
 
 // const buffer = new ArrayBuffer(4);
@@ -49,6 +50,7 @@ interface HourlyWeather {
   time: Date[],
   weatherCode: Float32Array,
   temperature_2m: Float32Array | null,
+  isDay?: number,
 }
 
 interface DailyWeather {
@@ -56,6 +58,16 @@ interface DailyWeather {
   weatherCode: Float32Array,
   temperatureMax: Float32Array,
   temperatureMin: Float32Array,  
+}
+
+interface KeyedDailyWeather {
+  time: {
+    time: Date,
+    id: string,
+  }[],
+  weatherCode: Float32Array,
+  temperatureMax: Float32Array,
+  temperatureMin: Float32Array,
 }
 
 interface Position {

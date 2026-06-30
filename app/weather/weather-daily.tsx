@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { dateFormatter, getWeatherIcon } from "../../utils/weather"
 import { useQuery } from "@tanstack/react-query";
 import { fetchWeatherApi } from "openmeteo";
+import { v4 as uuidv4 } from 'uuid';
 
 export default function WeatherDaily() {
   const [weatherDescription, setWeatherDescription] = useState({} as WeatherDescriptions);
- 
-  const [geolocation, setGeolocation] = useState({} as UserGeolocation)
+  const [dailyWeatherData, setDailyWeatherData] = useState({} as KeyedDailyWeather);
+  const [geolocation, setGeolocation] = useState({} as UserGeolocation);
 
   const getLocation = () => {
     console.log("Getting location")
@@ -16,12 +17,6 @@ export default function WeatherDaily() {
       console.error("Geolocation is not supported by this browser.")
     }
   }
-
-  useEffect(()=>{
-    if (!geolocation.latitude) {
-      getLocation()
-    }
-  },[geolocation])
   
   const success = (position: Position) => {
     setGeolocation({latitude: position.coords.latitude, longitude: position.coords.longitude});
@@ -36,6 +31,11 @@ export default function WeatherDaily() {
     Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
 
   const getDailyWeather = async (): Promise<DailyWeather> => {
+    if (!geolocation.latitude) {
+      getLocation();
+      throw new Error("Geolocation not available")
+    };
+
     const params = {
       latitude: geolocation.latitude,
       longitude: geolocation.longitude,
@@ -75,36 +75,59 @@ export default function WeatherDaily() {
     getWeatherDescriptions();
   },[dailyWeatherQuery.data])
 
+  useEffect(()=>{
+    // Could also just use `time` for keys since it's immutable
+    if (dailyWeatherQuery.data && dailyWeatherQuery.data.time) {
+      const data = {} as KeyedDailyWeather;
+      const length = dailyWeatherQuery.data.time.length;
+      data.time = [];
+      data.weatherCode = new Float32Array(length);
+      data.temperatureMax = new Float32Array(length);
+      data.temperatureMin = new Float32Array(length);
+      dailyWeatherQuery.data.time.map((time, index)=>{
+        data.time[index] = {
+          time: time,
+          id: uuidv4()
+        };
+        data.weatherCode[index] = dailyWeatherQuery.data.weatherCode[index];
+        data.temperatureMax[index] = dailyWeatherQuery.data.temperatureMax[index];
+        data.temperatureMin[index] = dailyWeatherQuery.data.temperatureMin[index];
+      });
+      setDailyWeatherData(data);
+    }
+  },[dailyWeatherQuery.data])
+
   if (dailyWeatherQuery.isPending) {
     return <div>Loading...</div>
   }
 
   if (dailyWeatherQuery.isError) {
-    return <div>Error: {dailyWeatherQuery.error.message}</div>
+    console.error(dailyWeatherQuery.error.message);
+    return null;
   }
 
   return <>
-    {dailyWeatherQuery.data && dailyWeatherQuery.data.time && 
+    {dailyWeatherData && dailyWeatherData.time && 
       <div>
         <h1 className="text-xl font-bold">Daily forecast:</h1>
         <ul>
-          {dailyWeatherQuery.data.time.map((time,index)=>
-            <li key={index}>{dateFormatter.format(time)} - {" "}
+          {dailyWeatherData.time.map((time,index)=>
+            <li key={time.id}>{dateFormatter.format(time.time)} - {" "}
               <img 
                 src={weatherDescription && 
-                  weatherDescription[dailyWeatherQuery.data.weatherCode[index] as keyof WeatherDescriptions]["day"]["image"]}
+                  weatherDescription[dailyWeatherData.weatherCode[index] as keyof WeatherDescriptions]["day"]["image"]}
                 height={32}
                 width={32}
                 className="inline-block"
               ></img>
               <span>
-                {dailyWeatherQuery.data.temperatureMin && 
-                  Math.round(dailyWeatherQuery.data.temperatureMin[index])}
+                {dailyWeatherData.temperatureMin && 
+                  Math.round(dailyWeatherData.temperatureMin[index])}
                 {" "} to {" "}
               </span>
               <span>
-                {dailyWeatherQuery.data.temperatureMax && 
-                  Math.round(dailyWeatherQuery.data.temperatureMax[index])}
+                {dailyWeatherData.temperatureMax && 
+                  Math.round(dailyWeatherData.temperatureMax[index])}
                 °C
               </span>
             </li>

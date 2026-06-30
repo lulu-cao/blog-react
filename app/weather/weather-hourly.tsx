@@ -16,12 +16,6 @@ export default function WeatherHourly() {
       console.error("Geolocation is not supported by this browser.")
     }
   }
-
-  useEffect(()=>{
-    if (!geolocation.latitude) {
-      getLocation()
-    }
-  },[geolocation])
   
   const success = (position: Position) => {
     setGeolocation({latitude: position.coords.latitude, longitude: position.coords.longitude});
@@ -36,6 +30,11 @@ export default function WeatherHourly() {
     Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
 
   const getHourlyWeather = async (): Promise<HourlyWeather> => {
+    if (!geolocation.latitude) {
+      getLocation();
+      throw new Error("Geolocation not available")
+    };
+    
     const params = {
       latitude: geolocation.latitude,
       longitude: geolocation.longitude,
@@ -86,22 +85,27 @@ export default function WeatherHourly() {
       <div>
         <h1 className="text-xl font-bold">Hourly forecast:</h1>
         <ol>
-          {hourlyWeatherQuery.data.time.map((time,index)=>
-            <li key={index}>
-              {timeFormatter.format(time)}
-              <img 
-                src={weatherDescription && 
-                  weatherDescription[hourlyWeatherQuery.data.weatherCode[index] as keyof WeatherDescriptions]["day"]["image"]}
-                height={32}
-                width={32}
-                className="inline-block"
-              ></img>
-              <span>
-                {hourlyWeatherQuery.data.temperature_2m && 
-                  Math.round(hourlyWeatherQuery.data.temperature_2m[index])}
-                °C
-              </span>
-            </li>
+          {hourlyWeatherQuery.data.time.map((time,index)=>{
+            {/* Could also just set `forecast_days` to 1 in api params */}
+            const today = new Date();
+            if (time.toDateString() == today.toDateString()) {
+              return <li key={index}>
+                  {timeFormatter.format(time)}
+                  <img 
+                    src={weatherDescription && 
+                      weatherDescription[hourlyWeatherQuery.data.weatherCode[index] as keyof WeatherDescriptions]["day"]["image"]}
+                    height={32}
+                    width={32}
+                    className="inline-block"
+                  ></img>
+                  <span>
+                    {hourlyWeatherQuery.data.temperature_2m && 
+                      Math.round(hourlyWeatherQuery.data.temperature_2m[index])}
+                    °C
+                  </span>
+                </li>
+              }
+            }
           )}
         </ol>
       </div>

@@ -17,12 +17,6 @@ export default function WeatherCurrent() {
       console.error("Geolocation is not supported by this browser.")
     }
   }
-
-  useEffect(()=>{
-    if (!geolocation.latitude) {
-      getLocation()
-    }
-  },[geolocation])
   
   const geolocationSuccess = (position: Position) => {
     setGeolocation({latitude: position.coords.latitude, longitude: position.coords.longitude});
@@ -34,6 +28,10 @@ export default function WeatherCurrent() {
 
   const getCurrentWeather = async (latitude?: number, longitude?: number): Promise<CurrentWeather> => {
     console.log("Getting current weather");
+    if (!geolocation.latitude) {
+      getLocation();
+      throw new Error("Geolocation not available")
+    };
 
     const params = {
       latitude: latitude || geolocation.latitude,
@@ -52,6 +50,7 @@ export default function WeatherCurrent() {
     return {
       temperature: current.variables(0)!.value(), 
       weatherCode: current.variables(1)!.value() as WeatherCode,
+      isDay: current.variables(2)!.value()
     }
   }
 
@@ -78,15 +77,27 @@ export default function WeatherCurrent() {
 
   return (
     <div>
-      <img 
-        src={weatherDescription && 
-          weatherDescription[currentWeatherQuery.data.weatherCode]["day"]["image"]}
-        alt={weatherDescription && 
-          weatherDescription[currentWeatherQuery.data.weatherCode]["day"]["description"]}
-        height={32}
-        width={32}
-        className="inline-block"
-      />
+      {currentWeatherQuery.data.isDay == 0 ? 
+        <img 
+          src={weatherDescription && 
+            weatherDescription[currentWeatherQuery.data.weatherCode]["night"]["image"]}
+          alt={weatherDescription && 
+            weatherDescription[currentWeatherQuery.data.weatherCode]["night"]["description"]}
+          height={32}
+          width={32}
+          className="inline-block"
+        />
+        :
+        <img 
+          src={weatherDescription && 
+            weatherDescription[currentWeatherQuery.data.weatherCode]["day"]["image"]}
+          alt={weatherDescription && 
+            weatherDescription[currentWeatherQuery.data.weatherCode]["day"]["description"]}
+          height={32}
+          width={32}
+          className="inline-block"
+        />
+      }
       <span>
         {Math.round(currentWeatherQuery.data.temperature)}°C
       </span> 
