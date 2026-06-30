@@ -4,7 +4,7 @@ import { fetchWeatherApi } from "openmeteo";
 import { useEffect, useState } from "react";
 import WeatherHourly from "./weather-hourly";
 import WeatherDaily from "./weather-daily";
-import WeatherCurrent from "./weather-current";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export default function Weather() {
   const [currentWeatherData, setCurrentWeatherData] = useState({} as CurrentWeather);
@@ -12,6 +12,7 @@ export default function Weather() {
   const [dailyWeatherData, setDailytWeatherData] = useState({} as DailyWeather);
   const [geolocation, setGeolocation] = useState({} as UserGeolocation)
   const [isShowingWeatherDetails, setIsShowingWeatherDetails] = useState(false);
+  const queryClient = new QueryClient();
 
   const getLocation = () => {
     console.log("Getting location")
@@ -120,12 +121,9 @@ export default function Weather() {
   }
 
   return <div>
-    <div onClick={getDailyAndHourly}>
-      <WeatherCurrent 
-        currentWeatherData={currentWeatherData as CurrentWeather} 
-      />
-    </div>
-    <WeatherDaily dailyWeatherData={dailyWeatherData as DailyWeather} />
-    <WeatherHourly hourlyWeatherData={hourlyWeatherData as HourlyWeather} />
+    <QueryClientProvider client={queryClient}>
+      <WeatherDaily />
+      <WeatherHourly />
+    </QueryClientProvider>
   </div>
 }

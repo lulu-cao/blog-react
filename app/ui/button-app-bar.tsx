@@ -8,12 +8,17 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Image from 'next/image';
-import Weather from '../weather/weather';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
+import WeatherCurrent from '../weather/weather-current';
 
 export default function ButtonAppBar() {
   const pathname = usePathname();
+  const queryClient = new QueryClient();
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -60,7 +65,9 @@ export default function ButtonAppBar() {
           {/* <Button color="inherit">Login</Button> */}
           <div className='flex flex-row'>
             <div className='px-3 self-center'>
-              <Weather />
+              <QueryClientProvider client={queryClient}>
+                <WeatherCurrent />
+              </QueryClientProvider>
             </div>
             <Image
               src="/lulu.jpg"

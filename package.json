@@ -14,6 +14,7 @@
     "@fontsource/roboto": "^5.2.10",
     "@mui/icons-material": "^9.1.1",
     "@mui/material": "^9.1.2",
+    "@tanstack/react-query": "^5.101.2",
     "next": "16.2.9",
     "openmeteo": "^1.2.3",
     "react": "19.2.4",
