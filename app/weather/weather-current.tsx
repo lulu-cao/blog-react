@@ -76,7 +76,7 @@ export default function WeatherCurrent() {
   }
 
   return (
-    <div>
+    <>
       {currentWeatherQuery.data.isDay == 0 ? 
         <img 
           src={weatherDescription && 
@@ -101,6 +101,6 @@ export default function WeatherCurrent() {
       <span>
         {Math.round(currentWeatherQuery.data.temperature)}°C
       </span> 
-    </div>
+    </>
   )
 }

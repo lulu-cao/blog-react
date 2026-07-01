@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -15,71 +15,89 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query';
 import WeatherCurrent from '../weather/weather-current';
+import Weather from '../weather/weather';
+import { useState } from 'react';
 
 export default function ButtonAppBar() {
   const pathname = usePathname();
   const queryClient = new QueryClient();
+  const [showWeatherDetails, setShowWeatherDetails] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const handleClick = () => {
+    showWeatherDetails == true ? setShowWeatherDetails(false) : setShowWeatherDetails(true)
+  };
+
+  const handleLogin = () => {
+    isLoggedIn == true ? setIsLoggedIn(false) : setIsLoggedIn(true)
+  }
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" color="success">
-        <Toolbar className='flex flex-row justify-between'>
-          {/* <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton> */}
-          <div className='flex flex-row gap-3'>
-            <Link
-              key="home"
-              href="/"
-              className={pathname=='/' ? 'font-extrabold' : 'text-zinc-300'}
+    <>
+      <Box>
+        <AppBar position="static" color="success">
+          <Toolbar className='flex flex-row justify-between'>
+            {/* <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              sx={{ mr: 2 }}
             >
-              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                Home
-              </Typography>
-            </Link>
-            <Link
-              key="explore"
-              href="/explore"
-              className={pathname=='/explore' ? 'font-extrabold' : 'text-zinc-300'}
-            >
-              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                Explore
-              </Typography>
-            </Link>
-            <Link
-              key="rss"
-              href="/rss"
-              className={pathname=='/rss' ? 'font-extrabold' : 'text-zinc-300'}
-            >
-              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                RSS
-              </Typography>
-            </Link>
-          </div>
-          {/* <Button color="inherit">Login</Button> */}
-          <div className='flex flex-row'>
-            <div className='px-3 self-center'>
-              <QueryClientProvider client={queryClient}>
-                <WeatherCurrent />
-              </QueryClientProvider>
+              <MenuIcon />
+            </IconButton> */}
+            <div className='flex flex-row gap-3'>
+              <Link
+                key="home"
+                href="/"
+                className={pathname=='/' ? 'font-extrabold' : 'text-zinc-300 hover:text-white'}
+              >
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                  Home
+                </Typography>
+              </Link>
+              <Link
+                key="explore"
+                href="/explore"
+                className={pathname=='/explore' ? 'font-extrabold' : 'text-zinc-300 hover:text-white'}
+              >
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                  Explore
+                </Typography>
+              </Link>
+              <Link
+                key="rss"
+                href="/rss"
+                className={pathname=='/rss' ? 'font-extrabold' : 'text-zinc-300 hover:text-white'}
+              >
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                  RSS
+                </Typography>
+              </Link>
             </div>
-            <Image
-              src="/lulu.jpg"
-              alt="lulu's cartoon pic"
-              width={1024}
-              height={1024}
-              priority
-              className="w-9 h-9 rounded-full"
-            />
-          </div>
-        </Toolbar>
-      </AppBar>
-    </Box>
+            <div className='flex flex-row'>
+              <button className='self-center cursor-pointer hover:bg-green-700 px-5 rounded-4xl hover:shadow-lg/15' onClick={handleClick}>
+                <QueryClientProvider client={queryClient}>
+                  <WeatherCurrent />
+                </QueryClientProvider>
+              </button>
+              {!isLoggedIn && <Button color="inherit" onClick={handleLogin}>Login</Button>}
+              { isLoggedIn && 
+                <button onClick={handleLogin} className='hover:cursor-pointer'>
+                  <Image
+                    src="/lulu.jpg"
+                    alt="lulu's cartoon pic"
+                    width={1024}
+                    height={1024}
+                    priority
+                    className="w-9 h-9 rounded-full"
+                  />
+                </button>
+              }
+            </div>
+          </Toolbar>
+        </AppBar>
+      </Box>
+      { showWeatherDetails && <Weather /> }
+    </>
   );
 }
