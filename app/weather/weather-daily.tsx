@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { dateFormatter } from "../../utils/weather"
-import { useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery } from "@tanstack/react-query";
 import { fetchWeatherApi } from "openmeteo";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -48,7 +48,11 @@ export default function WeatherDaily(
 
   const dailyWeatherQuery = useQuery({
     queryKey: ['daily-weather'],
-    queryFn: () => getDailyWeather(geolocation?.latitude, geolocation?.longitude)
+    queryFn: geolocation ? 
+      () => getDailyWeather(geolocation.latitude, geolocation.longitude) 
+      : 
+      skipToken,
+    staleTime: 60 * 60 * 1000,
   })
 
   useEffect(()=>{

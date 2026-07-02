@@ -1,7 +1,7 @@
 "use client"
 
 import { fetchWeatherApi } from "openmeteo";
-import { useQuery } from '@tanstack/react-query';
+import { skipToken, useQuery } from '@tanstack/react-query';
 
 export default function WeatherCurrent(
   {geolocation, weatherDescription}:{geolocation: UserGeolocation, weatherDescription:WeatherDescriptions}
@@ -35,7 +35,11 @@ export default function WeatherCurrent(
 
   const currentWeatherQuery = useQuery({
     queryKey: ['current-weather'],
-    queryFn: () => getCurrentWeather(geolocation?.latitude, geolocation?.longitude),
+    queryFn: geolocation ? 
+      () => getCurrentWeather(geolocation.latitude, geolocation.longitude) 
+      : 
+      skipToken,
+    staleTime: 60 * 60 * 1000,
   });
 
   if (currentWeatherQuery.isPending) {

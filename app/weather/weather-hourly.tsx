@@ -1,6 +1,6 @@
 import { timeFormatter } from "../../utils/weather"
 import { fetchWeatherApi } from "openmeteo";
-import { useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery } from "@tanstack/react-query";
 
 export default function WeatherHourly(
   {geolocation, weatherDescription}:{geolocation: UserGeolocation, weatherDescription:WeatherDescriptions}
@@ -41,7 +41,11 @@ export default function WeatherHourly(
 
   const hourlyWeatherQuery = useQuery({
     queryKey: ['hourly-weather'],
-    queryFn: () => getHourlyWeather(geolocation?.latitude, geolocation?.longitude)
+    queryFn: geolocation ? 
+      () => getHourlyWeather(geolocation.latitude, geolocation.longitude) 
+      : 
+      skipToken,
+    staleTime: 60 * 60 * 1000,
   })
 
   if (hourlyWeatherQuery.isPending) {
