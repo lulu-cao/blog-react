@@ -37,3 +37,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## References
 MUI - [Integrate MUI with Next](https://mui.com/material-ui/integrations/nextjs/)
+Blog - [A Gentle Introduction to Tanstack Query](https://neciudan.dev/a-gentle-introduction-to-tanstack-query)

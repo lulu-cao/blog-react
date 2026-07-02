@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
+import ButtonAppBar from "./ui/button-app-bar";
+// import {
+//   QueryClient,
+//   QueryClientProvider,
+// } from '@tanstack/react-query';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,6 +28,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // const queryClient = new QueryClient();
+  
   return (
     <html
       lang="en"
@@ -33,6 +40,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <AppRouterCacheProvider>
+          <ButtonAppBar />
           {children}
         </AppRouterCacheProvider>
       </body>

@@ -1,35 +1,14 @@
 "use client"
 
 import { fetchWeatherApi } from "openmeteo";
-import { useEffect, useState } from "react";
 import { useQuery } from '@tanstack/react-query';
-import { getWeatherIcon } from "@/utils/weather";
 
-export default function WeatherCurrent() {
-  const [geolocation, setGeolocation] = useState({} as UserGeolocation)
-  const [weatherDescription, setWeatherDescription] = useState({} as WeatherDescriptions);
-  
-  const getLocation = () => {
-    console.log("Getting location")
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(geolocationSuccess, geolocationError);
-    } else { 
-      console.error("Geolocation is not supported by this browser.")
-    }
-  }
-  
-  const geolocationSuccess = (position: Position) => {
-    setGeolocation({latitude: position.coords.latitude, longitude: position.coords.longitude});
-  }
-  
-  const geolocationError = () => {
-    alert("Sorry, no position available.");
-  }
-
+export default function WeatherCurrent(
+  {geolocation, weatherDescription}:{geolocation: UserGeolocation, weatherDescription:WeatherDescriptions}
+) {
   const getCurrentWeather = async (latitude?: number, longitude?: number): Promise<CurrentWeather> => {
-    console.log("Getting current weather");
-    if (!geolocation.latitude) {
-      getLocation();
+    console.log("getting current weather");
+    if (!latitude || !longitude) {
       throw new Error("Geolocation not available")
     };
 
@@ -56,16 +35,8 @@ export default function WeatherCurrent() {
 
   const currentWeatherQuery = useQuery({
     queryKey: ['current-weather'],
-    queryFn: () => getCurrentWeather(),
-  })
-
-  useEffect(()=>{
-    const getWeatherDescriptions = async() => {
-      const fetchedDescription = await getWeatherIcon();
-      setWeatherDescription(fetchedDescription)
-    };
-    getWeatherDescriptions();
-  },[currentWeatherQuery.data])
+    queryFn: () => getCurrentWeather(geolocation?.latitude, geolocation?.longitude),
+  });
 
   if (currentWeatherQuery.isPending) {
     return <span>Loading...</span>

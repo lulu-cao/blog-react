@@ -1,43 +1,23 @@
-import { useEffect, useState } from "react";
-import { getWeatherIcon, timeFormatter } from "../../utils/weather"
+import { timeFormatter } from "../../utils/weather"
 import { fetchWeatherApi } from "openmeteo";
 import { useQuery } from "@tanstack/react-query";
 
-export default function WeatherHourly() {
-  const [weatherDescription, setWeatherDescription] = useState({} as WeatherDescriptions);
-  
-  const [geolocation, setGeolocation] = useState({} as UserGeolocation)
-
-  const getLocation = () => {
-    console.log("Getting location")
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(success, error);
-    } else { 
-      console.error("Geolocation is not supported by this browser.")
-    }
-  }
-  
-  const success = (position: Position) => {
-    setGeolocation({latitude: position.coords.latitude, longitude: position.coords.longitude});
-  }
-  
-  const error = () => {
-    alert("Sorry, no position available.");
-  }
-
+export default function WeatherHourly(
+  {geolocation, weatherDescription}:{geolocation: UserGeolocation, weatherDescription:WeatherDescriptions}
+) {
   // Helper function to form time ranges
   const range = (start: number, stop: number, step: number) =>
     Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
 
-  const getHourlyWeather = async (): Promise<HourlyWeather> => {
-    if (!geolocation.latitude) {
-      getLocation();
+  const getHourlyWeather = async (latitude?: number, longitude?: number): Promise<HourlyWeather> => {
+    console.log("getting hourly weather");
+    if (!latitude || !longitude) {
       throw new Error("Geolocation not available")
     };
-    
+
     const params = {
-      latitude: geolocation.latitude,
-      longitude: geolocation.longitude,
+      latitude: latitude,
+      longitude: longitude,
       hourly: ["weather_code", "temperature_2m"],
       timezone: "America/Chicago",
     };
@@ -61,16 +41,8 @@ export default function WeatherHourly() {
 
   const hourlyWeatherQuery = useQuery({
     queryKey: ['hourly-weather'],
-    queryFn: () => getHourlyWeather()
+    queryFn: () => getHourlyWeather(geolocation?.latitude, geolocation?.longitude)
   })
-
-  useEffect(()=>{
-    const getWeatherDescriptions = async() => {
-      const fetchedDescription = await getWeatherIcon();
-      setWeatherDescription(fetchedDescription)
-    };
-    getWeatherDescriptions();
-  },[hourlyWeatherQuery.data])
 
   if (hourlyWeatherQuery.isPending) {
     return <div>Loading...</div>

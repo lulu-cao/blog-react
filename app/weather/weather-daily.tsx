@@ -1,44 +1,28 @@
 import { useEffect, useState } from "react";
-import { dateFormatter, getWeatherIcon } from "../../utils/weather"
+import { dateFormatter } from "../../utils/weather"
 import { useQuery } from "@tanstack/react-query";
 import { fetchWeatherApi } from "openmeteo";
 import { v4 as uuidv4 } from 'uuid';
 
-export default function WeatherDaily() {
-  const [weatherDescription, setWeatherDescription] = useState({} as WeatherDescriptions);
+export default function WeatherDaily(
+  {geolocation, weatherDescription}:{geolocation: UserGeolocation, weatherDescription:WeatherDescriptions}
+) {
   const [dailyWeatherData, setDailyWeatherData] = useState({} as KeyedDailyWeather);
-  const [geolocation, setGeolocation] = useState({} as UserGeolocation);
-
-  const getLocation = () => {
-    console.log("Getting location")
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(success, error);
-    } else { 
-      console.error("Geolocation is not supported by this browser.")
-    }
-  }
-  
-  const success = (position: Position) => {
-    setGeolocation({latitude: position.coords.latitude, longitude: position.coords.longitude});
-  }
-  
-  const error = () => {
-    alert("Sorry, no position available.");
-  }
 
   // Helper function to form time ranges
   const range = (start: number, stop: number, step: number) =>
     Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
 
-  const getDailyWeather = async (): Promise<DailyWeather> => {
-    if (!geolocation.latitude) {
-      getLocation();
+  const getDailyWeather = async (latitude: number, longitude: number): Promise<DailyWeather> => {
+    console.log("getting daily weather");
+
+    if (!latitude || !longitude) {
       throw new Error("Geolocation not available")
     };
 
     const params = {
-      latitude: geolocation.latitude,
-      longitude: geolocation.longitude,
+      latitude: latitude,
+      longitude: longitude,
 	    daily: ["weather_code", "temperature_2m_max", "temperature_2m_min"],
       timezone: "America/Chicago",
       forecast_days: 16,
@@ -64,16 +48,8 @@ export default function WeatherDaily() {
 
   const dailyWeatherQuery = useQuery({
     queryKey: ['daily-weather'],
-    queryFn: () => getDailyWeather()
+    queryFn: () => getDailyWeather(geolocation?.latitude, geolocation?.longitude)
   })
-
-  useEffect(()=>{
-    const getWeatherDescriptions = async() => {
-      const fetchedDescription = await getWeatherIcon();
-      setWeatherDescription(fetchedDescription)
-    };
-    getWeatherDescriptions();
-  },[dailyWeatherQuery.data])
 
   useEffect(()=>{
     // Could also just use `time` for keys since it's immutable
